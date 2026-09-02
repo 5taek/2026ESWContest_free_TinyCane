@@ -1,0 +1,27 @@
+name: care_guardian_app
+description: Guardian notification app for fall detection alerts.
+publish_to: "none"
+version: 0.1.0+1
+
+environment:
+  sdk: ">=3.8.0 <4.0.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+  cloud_firestore: ^6.6.0
+  firebase_auth: ^6.5.4
+  firebase_core: ^4.11.0
+  firebase_messaging: ^16.4.1
+  flutter_local_notifications: ^22.0.1
+  flutter_map: ^8.3.1
+  latlong2: ^0.10.1
+  geocoding: ^5.0.0
+
+dev_dependencies:
+  flutter_lints: ^6.0.0
+  flutter_test:
+    sdk: flutter
+
+flutter:
+  uses-material-design: true

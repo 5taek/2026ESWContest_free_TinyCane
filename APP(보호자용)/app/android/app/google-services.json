@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "296288710255",
+    "project_id": "tiny-vision-cane-6e80d",
+    "storage_bucket": "tiny-vision-cane-6e80d.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:296288710255:android:4c682778365d93f404e79a",
+        "android_client_info": {
+          "package_name": "com.tinyvisioncane.guardian"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyA-l5z-XgfCOr6vuRqx2vSTZB8TGDDiRqg"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

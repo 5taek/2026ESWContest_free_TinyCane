@@ -1,0 +1,174 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function isSelf(userId) {
+      return signedIn() && request.auth.uid == userId;
+    }
+
+    function isGuardianForEvent() {
+      return signedIn()
+        && request.auth.uid in resource.data.guardianUids;
+    }
+
+    function keepsSamePatient() {
+      return !resource.data.keys().hasAny(['patientId'])
+        || resource.data.patientId == request.resource.data.patientId;
+    }
+
+    function keepsSameDevice() {
+      return !resource.data.keys().hasAny(['deviceId'])
+        || !request.resource.data.keys().hasAny(['deviceId'])
+        || resource.data.deviceId == request.resource.data.deviceId;
+    }
+
+    function signedInDeviceUpdate(deviceId) {
+      return signedIn()
+        && request.resource.data.deviceId == deviceId
+        && request.resource.data.patientId is string
+        && request.resource.data.guardianUids is list
+        && request.auth.uid in request.resource.data.guardianUids
+        && keepsSamePatient();
+    }
+
+    function unsignedDeviceClaim(deviceId) {
+      return !signedIn()
+        && request.resource.data.deviceId == deviceId
+        && request.resource.data.patientId is string
+        && keepsSamePatient()
+        && request.resource.data.diff(resource.data).affectedKeys()
+          .hasOnly(['deviceId', 'patientId', 'updatedAt']);
+    }
+
+    function signedInDeviceReset() {
+      return signedIn()
+        && resource.data.guardianUids is list
+        && request.auth.uid in resource.data.guardianUids
+        && request.resource.data.resetBy == request.auth.uid
+        && !request.resource.data.keys().hasAny(['patientId'])
+        && request.resource.data.diff(resource.data).affectedKeys()
+          .hasOnly(['patientId', 'guardianUids', 'updatedAt', 'resetAt', 'resetBy']);
+    }
+
+    function unsignedDeviceReset(deviceId) {
+      return !signedIn()
+        && resource.data.patientId is string
+        && request.resource.data.deviceId == deviceId
+        && request.resource.data.resetPatientId == resource.data.patientId
+        && !request.resource.data.keys().hasAny(['patientId', 'guardianUids'])
+        && request.resource.data.diff(resource.data).affectedKeys()
+          .hasOnly(['patientId', 'guardianUids', 'updatedAt', 'resetAt', 'resetPatientId']);
+    }
+
+    function signedInPatientCreate(patientId) {
+      return signedIn()
+        && request.resource.data.patientId == patientId
+        && request.resource.data.guardianUids is list
+        && request.auth.uid in request.resource.data.guardianUids;
+    }
+
+    function signedInPatientUpdate(patientId) {
+      return signedInPatientCreate(patientId) && keepsSameDevice();
+    }
+
+    function unsignedPatientCreate(patientId) {
+      return !signedIn()
+        && request.resource.data.patientId == patientId
+        && request.resource.data.deviceId is string
+        && request.resource.data.guardianUids is list
+        && request.resource.data.guardianUids.size() == 0
+        && request.resource.data.keys()
+          .hasOnly(['patientId', 'deviceId', 'guardianUids', 'createdAt', 'updatedAt']);
+    }
+
+    function unsignedPatientUpdate(patientId) {
+      return !signedIn()
+        && request.resource.data.patientId == patientId
+        && request.resource.data.deviceId is string
+        && keepsSameDevice()
+        && request.resource.data.diff(resource.data).affectedKeys()
+          .hasOnly(['patientId', 'deviceId', 'updatedAt']);
+    }
+
+    function signedInPatientReset() {
+      return signedIn()
+        && resource.data.guardianUids is list
+        && request.auth.uid in resource.data.guardianUids
+        && request.resource.data.resetBy == request.auth.uid
+        && !request.resource.data.keys().hasAny(['deviceId'])
+        && request.resource.data.diff(resource.data).affectedKeys()
+          .hasOnly(['deviceId', 'guardianUids', 'updatedAt', 'resetAt', 'resetBy']);
+    }
+
+    function unsignedPatientReset(patientId) {
+      return !signedIn()
+        && resource.data.patientId == patientId
+        && resource.data.deviceId is string
+        && request.resource.data.resetDeviceId == resource.data.deviceId
+        && !request.resource.data.keys().hasAny(['deviceId', 'guardianUids'])
+        && request.resource.data.diff(resource.data).affectedKeys()
+          .hasOnly(['deviceId', 'guardianUids', 'updatedAt', 'resetAt', 'resetDeviceId']);
+    }
+
+    match /users/{userId} {
+      allow read, create, update: if isSelf(userId);
+      allow delete: if false;
+
+      match /fcmTokens/{tokenId} {
+        allow read, create, update, delete: if isSelf(userId);
+      }
+
+      match /fall_events/{eventId} {
+        allow read, update: if isSelf(userId);
+        allow create, delete: if false;
+      }
+    }
+
+    match /devices/{deviceId} {
+      allow get: if true;
+      allow list: if signedIn()
+        && resource.data.guardianUids is list
+        && request.auth.uid in resource.data.guardianUids;
+
+      allow create: if false;
+      allow update: if signedInDeviceUpdate(deviceId)
+        || unsignedDeviceClaim(deviceId)
+        || signedInDeviceReset()
+        || unsignedDeviceReset(deviceId);
+
+      allow delete: if false;
+    }
+
+    match /patients/{patientId} {
+      allow get: if true;
+      allow list: if signedIn()
+        && resource.data.guardianUids is list
+        && request.auth.uid in resource.data.guardianUids;
+
+      allow create: if signedInPatientCreate(patientId)
+        || unsignedPatientCreate(patientId);
+      allow update: if signedInPatientUpdate(patientId)
+        || unsignedPatientUpdate(patientId)
+        || signedInPatientReset()
+        || unsignedPatientReset(patientId);
+
+      allow delete: if false;
+    }
+
+    match /fall_events/{eventId} {
+      allow read: if isGuardianForEvent();
+
+      allow update: if isGuardianForEvent()
+        && request.resource.data.diff(resource.data).affectedKeys()
+          .hasOnly(['status', 'acknowledgedAt', 'acknowledgedBy'])
+        && request.resource.data.status == 'acknowledged'
+        && request.resource.data.acknowledgedBy == request.auth.uid;
+
+      allow create, delete: if false;
+    }
+  }
+}
