@@ -1,0 +1,17 @@
+menu "Fall detection Firebase connection"
+config FALL_WIFI_SSID
+    string "Wi-Fi SSID"
+    default ""
+config FALL_WIFI_PASSWORD
+    string "Wi-Fi password"
+    default ""
+config FALL_FIREBASE_FUNCTION_URL
+    string "reportFall Cloud Function URL"
+    default ""
+config FALL_FIREBASE_DEVICE_ID
+    string "Registered device ID"
+    default "cane-001"
+config FALL_FIREBASE_DEVICE_TOKEN
+    string "Device authentication token"
+    default ""
+endmenu

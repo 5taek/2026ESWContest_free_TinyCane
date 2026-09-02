@@ -1,0 +1,56 @@
+CONFIG_ESP_CONSOLE_SECONDARY_USB_SERIAL_JTAG=y
+
+# Board has 8MB flash; IDF's default is 2MB and silently clamps usable
+# space if left unset. Custom partition table gives the factory app 4MB
+# instead of the SINGLE_APP preset's fixed 1MB ceiling.
+CONFIG_ESPTOOLPY_FLASHSIZE_8MB=y
+CONFIG_PARTITION_TABLE_CUSTOM=y
+CONFIG_PARTITION_TABLE_CUSTOM_FILENAME="partitions.csv"
+
+# RPi5 shares the same USB port as the console for KWS audio in/results out.
+# Default to WARN so routine per-window logs (classification results,
+# Wi-Fi connect/Firebase-accepted chatter) don't clutter that channel --
+# buzzer/alert/error/retry events (WARN/ERROR) still come through.
+CONFIG_LOG_DEFAULT_LEVEL_WARN=y
+# CONFIG_LOG_MAXIMUM_EQUALS_DEFAULT is not set
+CONFIG_LOG_MAXIMUM_LEVEL_INFO=y
+
+# Reverted from 240 MHz: with CONFIG_PM_ENABLE off there is no dynamic
+# frequency scaling, so 240 MHz permanently raises the digital-core dbias
+# one step and opens a 6th LDO slave (vs 5 at 160 MHz) for the entire
+# uptime, not just during inference -- a real, continuous heat/power cost.
+# The latency benefit was already measured as only ~5-20ms out of KWS's
+# ~1000ms floor (the 1s audio capture dominates), so it wasn't worth that
+# tradeoff. Revisit only alongside CONFIG_PM_ENABLE + esp_pm_configure
+# dynamic scaling if 240 MHz bursts are ever actually needed.
+CONFIG_ESP_DEFAULT_CPU_FREQ_MHZ_160=y
+
+# Seeed Studio XIAO ESP32-S3 uses an ESP32-S3R8 with 8 MB Octal PSRAM.
+# Expose it to malloc so the Edge Impulse model and TLS buffers do not
+# compete exclusively for the much smaller internal SRAM.
+CONFIG_ESP32S3_SPIRAM_SUPPORT=y
+CONFIG_SPIRAM=y
+CONFIG_SPIRAM_MODE_OCT=y
+CONFIG_SPIRAM_TYPE_AUTO=y
+CONFIG_SPIRAM_SPEED_80M=y
+CONFIG_SPIRAM_BOOT_INIT=y
+CONFIG_SPIRAM_USE_MALLOC=y
+CONFIG_SPIRAM_MEMTEST=y
+CONFIG_SPIRAM_MALLOC_ALWAYSINTERNAL=0
+CONFIG_SPIRAM_MALLOC_RESERVE_INTERNAL=65536
+
+# KWS is pinned to core 1 to isolate it from Wi-Fi/TLS on core 0, but lwIP's
+# TCP/IP task defaults to NO_AFFINITY and floats onto core 1 at priority 18,
+# preempting KWS outright during any network activity. Pin it to core 0 so
+# the isolation the core-1 pin is meant to provide actually holds.
+CONFIG_LWIP_TCPIP_TASK_AFFINITY_CPU0=y
+
+# esp-dsp always allocates a table sized CONFIG_DSP_MAX_FFT_SIZE regardless
+# of the FFT size actually requested (ei_esp_dsp.h passes this constant, not
+# the caller's n_fft). The KWS impulse only ever needs a 256-point FFT, but
+# the unconfigured default of 4096 was trying to memalign(16, 16384) against
+# a largest free internal block of ~19KB and losing -- this is the exact
+# cause of every KWS inference failing with "Not possible to initialize FFT.
+# Error = 458755" (ESP_ERR_DSP_PARAM_OUTOFRANGE) and responding KWS_ERROR.
+# 512 is the smallest available choice and comfortably covers 256.
+CONFIG_DSP_MAX_FFT_SIZE_512=y

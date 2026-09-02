@@ -1,0 +1,25 @@
+Command: cmake -G Ninja -DPYTHON_DEPS_CHECKED=1 -DPYTHON=C:\Espressif\python_env\idf5.5_py3.13_env\Scripts\python.exe -DESP_PLATFORM=1 -DCCACHE_ENABLE=1 C:\Tiny_Vision_Cane\FD_KWS
+fatal: detected dubious ownership in repository at 'C:/esp/v5.5.4/esp-idf'
+'C:/esp/v5.5.4/esp-idf' is owned by:
+	BOOK-5BUKIBNBT7/bryan (S-1-5-21-3889749324-3602501939-2818693654-1001)
+but the current user is:
+	BOOK-5BUKIBNBT7/CodexSandboxOffline (S-1-5-21-3889749324-3602501939-2818693654-1004)
+To add an exception for this directory, call:
+
+	git config --global --add safe.directory C:/esp/v5.5.4/esp-idf
+fatal: detected dubious ownership in repository at 'C:/esp/v5.5.4/esp-idf'
+'C:/esp/v5.5.4/esp-idf' is owned by:
+	BOOK-5BUKIBNBT7/bryan (S-1-5-21-3889749324-3602501939-2818693654-1001)
+but the current user is:
+	BOOK-5BUKIBNBT7/CodexSandboxOffline (S-1-5-21-3889749324-3602501939-2818693654-1004)
+To add an exception for this directory, call:
+
+	git config --global --add safe.directory C:/esp/v5.5.4/esp-idf
+fatal: detected dubious ownership in repository at 'C:/esp/v5.5.4/esp-idf/components/openthread/openthread'
+'C:/esp/v5.5.4/esp-idf/components/openthread/openthread/.git' is owned by:
+	BOOK-5BUKIBNBT7/bryan (S-1-5-21-3889749324-3602501939-2818693654-1001)
+but the current user is:
+	BOOK-5BUKIBNBT7/CodexSandboxOffline (S-1-5-21-3889749324-3602501939-2818693654-1004)
+To add an exception for this directory, call:
+
+	git config --global --add safe.directory C:/esp/v5.5.4/esp-idf/components/openthread/openthread
