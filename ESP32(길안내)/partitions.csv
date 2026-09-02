@@ -1,0 +1,11 @@
+# XIAO ESP32-S3 (플래시 8MB) 파티션 테이블
+#
+# 기존 기본값(partitions_singleapp.csv)은 앱 영역이 1MB뿐이라, Wi-Fi 스택(~285KB)과
+# TLS 인증서 번들(~228KB)만으로 94%가 차서 여유가 63KB밖에 없었다.
+# 8MB 칩을 제대로 쓰도록 앱 영역을 4MB로 잡는다. 뒤쪽 ~4MB는 향후 OTA나
+# 데이터 파티션용으로 비워 둔다.
+#
+# Name,     Type, SubType, Offset,   Size,   Flags
+nvs,        data, nvs,     0x9000,   0x6000,
+phy_init,   data, phy,     0xf000,   0x1000,
+factory,    app,  factory, 0x10000,  4M,

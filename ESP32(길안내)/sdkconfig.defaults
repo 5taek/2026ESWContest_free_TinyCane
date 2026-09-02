@@ -1,0 +1,20 @@
+# 이 프로젝트가 동작하기 위해 반드시 필요한 설정들.
+# sdkconfig 는 .gitignore 대상이라, 여기에 적어두지 않으면 clean 빌드나
+# 새로 clone 했을 때 조용히 기본값으로 되돌아간다.
+
+# --- 보드: XIAO ESP32-S3 (플래시 8MB) ---
+CONFIG_ESPTOOLPY_FLASHSIZE_8MB=y
+
+# 앱 영역 4MB. 기본 partitions_singleapp.csv(1MB)로는 Wi-Fi + TLS 인증서 번들만으로
+# 94%가 차서 여유가 없었다. partitions.csv 참고.
+CONFIG_PARTITION_TABLE_CUSTOM=y
+CONFIG_PARTITION_TABLE_CUSTOM_FILENAME="partitions.csv"
+
+# --- 콘솔을 USB-CDC로 (기본값인 UART가 아님) ---
+# 라즈베리파이5와 주고받는 GPS 텍스트/신호 바이트가 이 회선을 그대로 쓴다.
+# UART로 되돌아가면 GPS 수신과 이벤트 신호가 통째로 동작하지 않는다.
+CONFIG_ESP_CONSOLE_USB_SERIAL_JTAG=y
+CONFIG_ESP_CONSOLE_SECONDARY_NONE=y
+
+# app_main 에서 Wi-Fi 접속까지 처리하므로 기본 스택(3584)으로는 부족하다.
+CONFIG_ESP_MAIN_TASK_STACK_SIZE=8192
