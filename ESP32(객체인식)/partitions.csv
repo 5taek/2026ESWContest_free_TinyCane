@@ -1,0 +1,29 @@
+# Name,   Type, SubType, Offset,  Size
+nvs,      data, nvs,     0x9000,  0x6000,
+phy_init, data, phy,     0xf000,  0x1000,
+factory,  app,  factory, 0x10000, 3M,
+# 모델은 코드에 배열로 박지 않고 파티션에 원본 그대로 플래싱한 뒤
+# esp_partition_mmap()으로 매핑해서 쓴다 (RAM 소모 0)
+# map_partition()이 subtype 0x40을 하드코딩해서 찾으므로 전부 같은 subtype이어야 함
+bbmodel,  data, 0x40,    ,        1M,
+detmodel, data, 0x40,    ,        1M,
+# 장애물감지 SSD 모델 (2.72MB) — 여유 두고 3M
+ssdmodel, data, 0x40,    ,        2M,
+recmodel, data, 0x40,    ,        1M,
+# 음성 클립(버스번호+모드전환 안내+장애물종류 안내, raw PCM). 기존 파티션
+# 오프셋 안 바뀌게 맨 뒤에 추가함 — voice.bin을 parttool.py로 한 번만 쓰면
+# 되고 그 앞의 모델(bb/det/ssd/rec)은 재플래싱 불필요. voice_clips.h의
+# 오프셋 테이블과 세트로 관리할 것.
+# 2026-08-25: 자전거/킥보드/볼라드/사람 안내 4개 추가하면서 voice.bin이
+# 1,084,800바이트로 늘어나 1M을 넘겨서 1280K로 증설.
+# 2026-08-26: 길안내모드(학교/버스정류장/확정/도착/긴급상황) 안내 6개 추가
+# 하면서 voice.bin이 1,668,480바이트가 돼서 1280K도 넘김 → 2M으로 증설.
+# 이후 좌회전/우회전/계단(3개) + 점자블록 방향안내(정면/왼쪽/오른쪽, 3개)
+# 추가하면서 voice.bin이 2,171,520바이트가 돼서 2M도 넘김 → 2304K로 증설.
+# 횡단보도(0x08)는 아직 wav 없어서 미포함, 나중에 추가할 여유 있음.
+# voice 뒤의 stations는 오프셋이 밀리므로 재플래싱 필요.
+voice,    data, 0x40,    ,        2304K,
+# 대구 버스정류장 DB (bsId+lat/lon, 5913개 x 16B = 92.4KB). 여유 두고 128K.
+# stations.bin을 parttool.py로 씀. 원본은 data/raw_response.json(공공데이터
+# bs 배열)에서 뽑음 — 갱신하려면 그 JSON 다시 받아서 변환 스크립트 재실행.
+stations, data, 0x40,    ,        128K,
